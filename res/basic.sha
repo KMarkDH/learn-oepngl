@@ -1,0 +1,24 @@
+#vertex shader
+#version 330 core
+
+layout (location = 0) in vec4 aPos;
+layout (location = 1) in vec4 bPos;
+out vec3 g_color;
+
+void main()
+{
+   gl_Position = bPos;
+   g_color = bPos.xyz;
+}
+
+#fragment shader
+#version 330 core
+
+in vec3 g_color;
+layout(location = 0) out vec4 aColor;
+uniform vec4 u_Color;
+
+void main()
+{
+aColor = vec4(g_color, 1.0f);
+}
