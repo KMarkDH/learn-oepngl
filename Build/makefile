@@ -1,7 +1,7 @@
-HEADER_PATH = 	-I ../Headers \
-				-I ../Dependence/Headers
+HEADER_PATH = 	-I ../src \
+				-I ../src/vendor
 
-LIB_PATH =	-L ../Dependence/Lib \
+LIB_PATH =	-L ../src/vendor/Lib \
 			-lglfw -framework OpenGL
 
 CXXFLAG = -g
@@ -9,9 +9,12 @@ CXXFLAG = -g
 OBJECTS = 	main.o \
 			ShaderFile.o \
 			glad.o \
-			VAO.o \
+			VertexBuffer.o \
+			IndexBuffer.o \
+			VertexArrayBuffer.o \
 			Application.o \
-			Shader.o
+			Shader.o \
+			stb_image.o
 
 TARGET = game
 
@@ -21,23 +24,24 @@ $(TARGET):$(OBJECTS)
 
 	echo "\033[44;30m	::installing::	\033[0m"
 	mkdir -p ../Release
-	mv $(TARGET) ../Release/$(TARGET)
+	cp $(TARGET) ../Release/$(TARGET)
+
+	rm -rf ../Release/res
 	cp -rf ../res ../Release
-	-rm -f *.o
 	echo "\033[44;30m	::build done::	\033[0m"
 
 #compile c++ file in lib
-%.o:../Dependence/Lib/%.cpp
+%.o:../src/vendor/%.cpp
 	echo "\033[44;30m	::build lib cpp file::	\033[0m"
 	g++ $(HEADER_PATH) $(CXXFLAG) $^ -c $^
 
 #compile c file in lib
-%.o:../Dependence/Lib/%.c
+%.o:../src/vendor/%.c
 	echo "\033[44;30m	::build lib c file::	\033[0m"
 	gcc $(HEADER_PATH) $(CXXFLAG) $^ -c $^
 
 #compile all source code
-%.o:../Sources/%.cpp
+%.o:../src/%.cpp
 	echo "\033[44;30m	::build source file::	\033[0m"
 	g++ $(HEADER_PATH) $(CXXFLAG) $^ -c $^
 
