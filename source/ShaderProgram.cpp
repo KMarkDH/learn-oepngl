@@ -19,7 +19,7 @@ ShaderProgram::ShaderProgram(std::string shaderFile)
 {
     char dlm = '/';
 #if defined(_WIN32) || defined(WIN32)
-    char dlm = '\\';
+    dlm = '\\';
 #endif
     m_pId = this->readShaderFile(proc_path + dlm + "res/shaders/" + shaderFile + ".shader");
 }

@@ -135,7 +135,7 @@ unsigned int genProgram()
 void definePath(std::string arg)
 {
 #if defined(_WIN32) || defined(WIN32)
-    int dP = arg.rfind('\\'));
+    int dP = arg.rfind('\\');
 #else
     int dP = arg.rfind('/');
 #endif
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
 		glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		float timeValue = glfwGetTime();
+		float timeValue =  (float)(glfwGetTime());
 		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
 
 		
