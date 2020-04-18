@@ -34,45 +34,6 @@ void frame_buffer_size(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-glm::vec3 cameraPos(0.0f);
-
-void precess_event(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		filter += 0.05;
-		if (filter > 1.0f) filter = 1.0f;
-		cameraPos.z -= 0.01f;
-	}
-		
-
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		filter -= 0.05;
-		if (filter < 0.0f) filter = 0.0f;
-		cameraPos.z += 0.01f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-	{
-		cameraPos.x -= 0.01f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	{
-		cameraPos.x += 0.01f;
-	}
-}
-
 static const char* vshader = "#version 330 core\n\
 layout (location = 0) in vec3 aPos; \n\
 void main() \n\
@@ -135,15 +96,112 @@ unsigned int genProgram()
 void definePath(std::string arg)
 {
 #if defined(_WIN32) || defined(WIN32)
-    int dP = arg.rfind('\\');
+    size_t dP = arg.rfind('\\');
 #else
-    int dP = arg.rfind('/');
+    size_t dP = arg.rfind('/');
 #endif
 	
 	proc_path = arg.substr(0, dP);
 	proc_name = arg.substr(dP - 1);
 
 	std::cout << "workpath is :" << proc_path << std::endl;
+}
+
+double lastX = screenWdt / 2.0f, lastY = screenHgh / 2.0f;
+double yaw = 0.0f, pitch = 0.0f;
+bool firstCur = true;
+
+glm::vec3 cameraPos(0.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+void precess_event(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		glm::vec3 target(cameraFront.x, 0.0f, cameraFront.z);
+		cameraPos += glm::normalize(target) * 0.3f;
+	}
+		
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		glm::vec3 target(cameraFront.x, 0.0f, cameraFront.z);
+		cameraPos -= glm::normalize(target) * 0.3f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		glm::vec3 left = glm::normalize(glm::cross(cameraUp, cameraFront));
+		glm::vec3 target(left.x, 0.0f, left.z);
+		cameraPos += target * 0.3f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		glm::vec3 left = glm::normalize(glm::cross(cameraUp, cameraFront));
+		glm::vec3 target(left.x, 0.0f, left.z);
+		cameraPos -= target * 0.3f;
+	}
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	double xoffset = xpos - lastX;
+    double yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    double sensitivity = 0.05;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw   += xoffset;
+    pitch += yoffset;
+
+	pitch = (pitch > 89.0f) ? 89.0f : pitch;
+	pitch = (pitch < -89.0f) ? -89.0f : pitch;
+	
+	glm::vec3 front(0.0f);
+	front.x = cosf(glm::radians(pitch)) * cosf(glm::radians(yaw));
+	front.y = sinf(glm::radians(pitch));
+	front.z = cosf(glm::radians(pitch)) * sinf(glm::radians(yaw));
+	cameraFront = glm::normalize(front);
+}
+
+glm::mat4 myLookAt(glm::vec3 pos, glm::vec3 target, glm::vec3 up)
+{
+	glm::vec3 zA = glm::normalize(pos - target);
+	glm::vec3 xA = glm::normalize(glm::cross(glm::normalize(up), zA));
+	glm::vec3 yA = glm::normalize(glm::cross(zA, xA));
+	glm::mat4 M(1.0f);
+
+	M[0][0] = xA.x;
+	M[1][0] = xA.y;
+	M[2][0] = xA.z;
+	M[0][1] = yA.x;
+	M[1][1] = yA.y;
+	M[2][1] = yA.z;
+	M[0][2] = zA.x;
+	M[1][2] = zA.y;
+	M[2][2] = zA.z;
+
+	glm::mat4 trans(1.0f);
+	trans[3][0] = -pos.x;
+	trans[3][1] = -pos.y;
+	trans[3][2] = -pos.z;
+	M = M * trans;
+
+	return M;
 }
 
 
@@ -175,6 +233,8 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	glEnable(GL_DEPTH_TEST);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
 
 	float vertices[] = {
 		//---坐标---------     -----颜色-------       ------纹理坐标-------  --------纹理坐标2
@@ -372,49 +432,6 @@ int main(int argc, char* argv[])
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		float timeValue =  (float)(glfwGetTime());
-		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-
-		
-		// draw first
-		glBindVertexArray(VAO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-
-		sp.use();
-		sp.ui("ourTexture", 0);
-		sp.ui("myTexture", 1);
-		double time = glfwGetTime();
-		float gVal = (sin(time) / 2.0f) + 0.5f;
-		sp.u4f("ourColor", 0.1f, gVal, 0.1f, 1.0f);
-		sp.uf("filr", filter);
-		sp.umat4("transform", trans);
-
-		glm::mat4 model(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-		glm::mat4 view(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-		glm::mat4 perspective(1.0f);
-		perspective = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.f);
-
-		sp.umat4("model", model);
-		sp.umat4("view", view);
-		sp.umat4("perspective", perspective);
-
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		// glm::mat4 trans1;
-		// trans1 = glm::translate(trans1, glm::vec3(-0.75f, 0.75f, 0.0f));
-		// trans1 = glm::scale(trans1, glm::vec3(0.5f * sinf(glfwGetTime()), 0.5f * sinf(glfwGetTime()), 1.0f));
-		// sp.umat4("transform", trans1);
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glBindVertexArray(boxVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
@@ -441,14 +458,17 @@ int main(int argc, char* argv[])
 			boxShader.ui("uTexture", 0);
 			glm::mat4 bTrans(1.0f);
 			bTrans = glm::translate(bTrans, cubePositions[i]);
-			//bTrans = glm::rotate(bTrans, (float)(20.0f * i), glm::vec3(0.5f, 1.0f, 0.0f));
-			if ((i % 3) == 0)
-			{
-				bTrans = glm::rotate(bTrans, (float)glfwGetTime() * (float)(glm::radians(20.0f)), glm::vec3(0.0f, 0.0f, 1.0f));
-			}
+			float xang = (float)rand() / (float)RAND_MAX;
+			bTrans = glm::rotate(bTrans, (float)glm::radians(20.0f) * (float)glfwGetTime(), glm::vec3(xang, 1.0f, 0.0f));
+			
 			glm::mat4 bModel(1.0f);
-			glm::mat4 bView(1.0f);
-			bView = glm::translate(bView, cameraPos * -1.0f);
+			// bView = glm::translate(bView, cameraPos * -1.0f);
+			glm::mat4 bView = myLookAt
+			(
+				cameraPos,
+				cameraPos + cameraFront,
+				cameraUp
+			);
 			
 			glm::mat4 bPerspective = glm::perspective(glm::radians(45.0f), (float)screenWdt / (float)screenHgh, 0.1f, 100.0f);
 			boxShader.umat4("transform", bTrans);
