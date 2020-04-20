@@ -11,6 +11,10 @@
 
 #include <Shader.h>
 
+glm::vec3 cameraPos(0.0f, 0.0f, -3.0f);
+glm::vec3 cameraFront(0.0f, 0.0f, 1.0f);
+glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
+
 std::string Application::WorkPath;
 
 Application::Application(std::string name, std::string arg)
@@ -75,11 +79,59 @@ void Application::processKeyboard()
     {
         glfwSetWindowShouldClose(m_window, GL_TRUE);
     }
+
+    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        cameraPos += cameraFront * 0.1f;
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        cameraPos -= cameraFront * 0.1f;
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        cameraPos += glm::normalize(glm::cross(cameraUp, cameraFront)) * 0.1f;
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        cameraPos -= glm::normalize(glm::cross(cameraUp, cameraFront)) * 0.1f;
+    }
 }
 
+double lastX, lastY;
+double scale = 0.05f;
+bool firstMove = true;;
+double pitch = 0, yaw = 0;
 void Application::processCursor(double xpos, double ypos)
 {
+    if (firstMove)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMove = false;
+    }
 
+    double offsetX = xpos - lastX;
+    double offsetY = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    pitch += offsetY * scale;
+    yaw += offsetX * scale;
+
+    if(pitch > 89.0f)
+        pitch =  89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 front(0.0f);
+    front.x = cosf(glm::radians(pitch)) * cosf(glm::radians(yaw));
+    front.y = sinf(glm::radians(pitch));
+    front.z = cosf(glm::radians(pitch)) * sinf(glm::radians(yaw));
+    cameraFront = glm::normalize(front);
 }
 
 void Application::proceeFrameResize(int width, int height)
@@ -167,9 +219,10 @@ void Application::mainLoop()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    const char* filePath = std::string(Application::WorkPath + "/res/textures/container.jpg").c_str();
+    std::string filePath = std::string(Application::WorkPath + "\\res\\textures\\container.jpg").c_str();
+
     int width, height, channel;
-    unsigned char* data = stbi_load(filePath, &width, &height, &channel, 0);
+    unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channel, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -193,7 +246,7 @@ void Application::mainLoop()
         shader.setInt("texturePtr", 0);
         shader.setMat4("transform", trans);
         shader.setMat4("model", glm::mat4(1.0f));
-        shader.setMat4("view", glm::lookAt(glm::vec3(3.0f * sinf(glfwGetTime() * glm::radians(20.0f)), 0.0f, 3.0f * cosf(glfwGetTime() * glm::radians(20.0f))), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+        shader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         shader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
