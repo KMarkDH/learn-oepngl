@@ -16,7 +16,7 @@ glm::vec3 cameraFront(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 glm::vec3 lightColor(1.0f, 0.0f, 0.0f);
-glm::vec3 lightPos(0.0f, 3.0f, 0.0f);
+glm::vec3 lightPos(0.0f, 0.0f, 3.0f);
 
 std::string Application::WorkPath;
 
@@ -279,14 +279,15 @@ void Application::mainLoop()
         glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        trans = glm::rotate(trans, glm::radians(((float)glfwGetTime()) * 0.04f), glm::vec3(0.0f, 1.0f, 0.0f));
         phoneShader.use();
         phoneShader.setInt("texturePtr", 0);
-        phoneShader.setMat4("transform", trans);
-        phoneShader.setMat4("model", glm::mat4(1.0f));
+        phoneShader.setMat4("model", trans);
         phoneShader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         phoneShader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
         phoneShader.setVec3("lightColor", lightColor);
         phoneShader.setVec3("lightPos", lightPos);
+        phoneShader.setVec3("viewPos", cameraPos);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -296,8 +297,7 @@ void Application::mainLoop()
 
         sunShader.use();
         sunShader.setInt("texturePtr", 0);
-        sunShader.setMat4("transform", sunTrans);
-        sunShader.setMat4("model", glm::mat4(1.0f));
+        sunShader.setMat4("model", sunTrans);
         sunShader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         sunShader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
 
