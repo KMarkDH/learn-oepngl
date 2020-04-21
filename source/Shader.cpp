@@ -8,8 +8,7 @@
 
 Shader::Shader(std::string name)
 {
-    std::cout << Application::WorkPath + "\\res\\shaders\\" + name + ".shader" << std::endl;
-    createShader(Application::WorkPath + "/res/shaders/" + name + ".shader");
+    createShader(Application::getFilePath("/res/shaders/" + name + ".shader"));
 }
 
 Shader::~Shader()

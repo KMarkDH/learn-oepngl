@@ -16,6 +16,7 @@ class Application
 public:
 
     static std::string WorkPath;
+    static const std::string getFilePath(std::string file);
 
 public:
 

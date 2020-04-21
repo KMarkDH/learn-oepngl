@@ -219,7 +219,7 @@ void Application::mainLoop()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    std::string filePath = std::string(Application::WorkPath + "\\res\\textures\\container.jpg").c_str();
+    std::string filePath = Application::getFilePath("/res/textures/container.jpg");
 
     int width, height, channel;
     unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channel, 0);
@@ -255,4 +255,17 @@ void Application::mainLoop()
         
         this->processKeyboard();
     }
+}
+
+const std::string Application::getFilePath(std::string file)
+{
+    std::string ret = Application::WorkPath + file;
+#if defined(_WIN32) || defined(WIN32)
+    for (int i = 0; i < ret.size(); ++i)
+    {
+        if (ret[i] == 0x002F)
+            ret[i] = 0x005C;
+    }
+#endif
+    return ret;
 }
