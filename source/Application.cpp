@@ -15,6 +15,9 @@ glm::vec3 cameraPos(0.0f, 0.0f, -3.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
+glm::vec3 lightColor(1.0f, 0.0f, 0.0f);
+glm::vec3 lightPos(0.0f, 3.0f, 0.0f);
+
 std::string Application::WorkPath;
 
 Application::Application(std::string name, std::string arg)
@@ -63,6 +66,7 @@ bool Application::init(std::string name)
     m_window = window;
 
     glEnable(GL_DEPTH_TEST);
+    stbi_set_flip_vertically_on_load(1);
     
     return true;
 }
@@ -144,47 +148,47 @@ void Application::mainLoop()
 {
     float vertices[] = 
     {
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,      0.0f,  0.0f, -1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,      0.0f,  0.0f, -1.0f, 
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,      0.0f,  0.0f, -1.0f, 
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,      0.0f,  0.0f, -1.0f, 
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,      0.0f,  0.0f, -1.0f, 
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,      0.0f,  0.0f, -1.0f, 
 
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,      0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,      0.0f,  0.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,      0.0f,  0.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,      0.0f,  0.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,      0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,      0.0f,  0.0f, 1.0f,
 
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,      -1.0f,  0.0f,  0.0f,
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,      -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,      -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,      -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,      -1.0f,  0.0f,  0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,      -1.0f,  0.0f,  0.0f,
 
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,      1.0f,  0.0f,  0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,      1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,      1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,      1.0f,  0.0f,  0.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,      1.0f,  0.0f,  0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,      1.0f,  0.0f,  0.0f,
 
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,      0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,      0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,      0.0f, -1.0f,  0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,      0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,      0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,      0.0f, -1.0f,  0.0f,
 
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,      0.0f,  1.0f,  0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,      0.0f,  1.0f,  0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,      0.0f,  1.0f,  0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,      0.0f,  1.0f,  0.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,      0.0f,  1.0f,  0.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,      0.0f,  1.0f,  0.0f
     };
 
     unsigned int VAO = 0, VBO = 0;
@@ -196,11 +200,14 @@ void Application::mainLoop()
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -231,9 +238,39 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     Shader shader("default-tmvp");
     glm::mat4 trans(1.0f);
 
+    Shader sunShader("direction-light");
+    glm::mat4 sunTrans(1.0f);
+    sunTrans = glm::translate(sunTrans, lightPos);
+    sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
+
+    unsigned int sunTex;
+    glGenTextures(1, &sunTex);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, sunTex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    data = stbi_load(Application::getFilePath("/res/textures/sun.jpg").c_str(), &width, &height, &channel, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    Shader phoneShader("default-tmvp-phong");
+
+
+    lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     while (!glfwWindowShouldClose(m_window))
     {
         glfwSwapBuffers(m_window);
@@ -242,14 +279,30 @@ void Application::mainLoop()
         glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
-        shader.setInt("texturePtr", 0);
-        shader.setMat4("transform", trans);
-        shader.setMat4("model", glm::mat4(1.0f));
-        shader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
-        shader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
+        phoneShader.use();
+        phoneShader.setInt("texturePtr", 0);
+        phoneShader.setMat4("transform", trans);
+        phoneShader.setMat4("model", glm::mat4(1.0f));
+        phoneShader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
+        phoneShader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
+        phoneShader.setVec3("lightColor", lightColor);
+        phoneShader.setVec3("lightPos", lightPos);
+        
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+        sunShader.use();
+        sunShader.setInt("texturePtr", 0);
+        sunShader.setMat4("transform", sunTrans);
+        sunShader.setMat4("model", glm::mat4(1.0f));
+        sunShader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
+        sunShader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sunTex);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         

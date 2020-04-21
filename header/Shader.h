@@ -14,6 +14,7 @@ public:
     void use();
     void setInt(std::string uniform, int value);
     void setMat4(std::string uniform, glm::mat4 value);
+    void setVec3(std::string uniform, glm::vec3 value);
 
 private:
 

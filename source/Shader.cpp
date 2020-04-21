@@ -33,6 +33,12 @@ void Shader::setMat4(std::string uniform, glm::mat4 value)
     glUniformMatrix4fv(u, 1, GL_FALSE, glm::value_ptr(value));
 }
 
+void Shader::setVec3(std::string uniform, glm::vec3 value)
+{
+    unsigned int u = glGetUniformLocation(m_shader, uniform.c_str());
+    glUniform3fv(u, 1, glm::value_ptr(value));
+}
+
 void Shader::createShader(std::string fileName)
 {
     std::fstream file(fileName, std::ios::in);
