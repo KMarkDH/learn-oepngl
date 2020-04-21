@@ -132,9 +132,9 @@ void Application::processCursor(double xpos, double ypos)
         pitch = -89.0f;
 
     glm::vec3 front(0.0f);
-    front.x = cosf(glm::radians(pitch)) * cosf(glm::radians(yaw));
-    front.y = sinf(glm::radians(pitch));
-    front.z = cosf(glm::radians(pitch)) * sinf(glm::radians(yaw));
+    front.x = cosf((float)glm::radians(pitch)) * cosf((float)glm::radians(yaw));
+    front.y = sinf((float)glm::radians(pitch));
+    front.z = cosf((float)glm::radians(pitch)) * sinf((float)glm::radians(yaw));
     cameraFront = glm::normalize(front);
 }
 
