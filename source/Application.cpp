@@ -305,7 +305,7 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Shader phoneShader("default-tmvp-phong");
+    Shader phoneShader("default-tmvp-gouraud");
 
 
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -324,6 +324,7 @@ void Application::mainLoop()
             ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
             ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
             ImGui::SliderFloat("specular strength", &specularStrength, 0.0f, 1.0f);
+            ImGui::ColorEdit3("light color", (float*)&lightColor);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
