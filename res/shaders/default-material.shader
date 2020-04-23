@@ -29,13 +29,23 @@ void main()
 
 @fragment
 #version 330 core
+
+struct Light
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    int shinnese;
+};
+
 in vec2 TexCoor;
 in vec3 Normal;
 in vec3 LightPos;
 in vec3 VetCoor;
 
 uniform sampler2D uTexture0;
-uniform vec3 uLightColor;
+uniform Light lightMaterial;
 uniform float uAmbientStrength;
 uniform float uDiffuseStrength;
 uniform float uSpecularStrength;
@@ -48,14 +58,16 @@ void main()
     vec3 viewDir = normalize(-VetCoor);
     vec3 reflectDir = reflect(-lightDir, Normal);
     
-    vec3 ambient = uAmbientStrength * uLightColor;
+    vec3 ambient = uAmbientStrength * lightMaterial.ambient;
 
     float diffuseFct = max(dot(lightDir, Normal), 0.0f);
-    vec3 diffuse = diffuseFct * uDiffuseStrength * uLightColor;
+    vec3 diffuse = diffuseFct * uDiffuseStrength * lightMaterial.diffuse;
 
-    float specularFct = pow(max(dot(reflectDir, viewDir), 0.0f), 32);
-    vec3 specular = specularFct * uSpecularStrength * uLightColor;
+    float specularFct = pow(max(dot(reflectDir, viewDir), 0.0f), lightMaterial.shinnese);
+    vec3 specular = specularFct * uSpecularStrength * lightMaterial.specular;
 
     vec3 result = ambient + diffuse + specular;
-    FragColor = texture(uTexture0, TexCoor) * vec4(result.xyz, 1.0f);
+    //为了更好地观察，先将箱子设为白色
+    //texture(uTexture0, TexCoor)
+    FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f) * vec4(result.xyz, 1.0f);
 }

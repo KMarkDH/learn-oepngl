@@ -27,6 +27,18 @@ static float ambientStrength = 1.0f;
 static float diffuseStrength = 1.0f;
 static float specularStrength = 1.0f;
 
+struct Material
+{
+    glm::vec3 ambient = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    int shinnese = 8;
+};
+
+static Material lightMaterial; 
+static bool lightRotate = false;
+
 std::string Application::WorkPath;
 
 Application::Application(std::string name, std::string arg)
@@ -139,6 +151,12 @@ void Application::processKeyboard()
         curso_enable = false;
         glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
+
+    if (glfwGetKey(m_window, GLFW_KEY_1) == GLFW_PRESS)
+        lightRotate = true;
+
+    if (glfwGetKey(m_window, GLFW_KEY_2) == GLFW_PRESS)
+        lightRotate = false;
 }
 
 double lastX, lastY;
@@ -304,7 +322,7 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Shader phoneShader("mvp-phong-review");
+    Shader phoneShader("default-material");
 
 
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -319,13 +337,18 @@ void Application::mainLoop()
 
         {
             ImGui::Begin("Shader Data");
-            
             ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
             ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
             ImGui::SliderFloat("specular strength", &specularStrength, 0.0f, 1.0f);
             ImGui::ColorEdit3("light color", (float*)&lightColor);
-
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+
+            ImGui::Begin("Material");
+            ImGui::ColorEdit3("ambient", (float*)&lightMaterial.ambient);
+            ImGui::ColorEdit3("diffuse", (float*)&lightMaterial.diffuse);
+            ImGui::ColorEdit3("specular", (float*)&lightMaterial.specular);
+            ImGui::SliderInt("shinnese", &lightMaterial.shinnese, 8, 1024);
             ImGui::End();
         }
         ImGui::Render();
@@ -338,13 +361,17 @@ void Application::mainLoop()
         phoneShader.setMat4("uModel", trans);
         phoneShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         phoneShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
-        phoneShader.setVec3("uLightColor", lightColor);
         phoneShader.setVec3("uLightPos", lightPos);
         // phoneShader.setVec3("viewPos", cameraPos);
 
         phoneShader.setFloat("uAmbientStrength", ambientStrength);
         phoneShader.setFloat("uDiffuseStrength", diffuseStrength);
         phoneShader.setFloat("uSpecularStrength", specularStrength);
+
+        phoneShader.setVec3("lightMaterial.ambient", lightMaterial.ambient);
+        phoneShader.setVec3("lightMaterial.diffuse", lightMaterial.diffuse);
+        phoneShader.setVec3("lightMaterial.specular", lightMaterial.specular);
+        phoneShader.setInt("lightMaterial.shinnese", lightMaterial.shinnese);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -352,8 +379,16 @@ void Application::mainLoop()
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glm::mat4 sunTrans(1.0f);
-        lightPos.x = sinf((float)glfwGetTime()) * 3.0f;
-        lightPos.z = cosf((float)glfwGetTime()) * 3.0f;
+        if (lightRotate)
+        {
+            lightPos.x = sinf((float)glfwGetTime()) * 3.0f;
+            lightPos.z = cosf((float)glfwGetTime()) * 3.0f;
+        }
+        else
+        {
+            lightPos.x = sinf(glm::radians(45.0f)) * 3.0f;
+            lightPos.z = cosf(glm::radians(45.0f)) * 3.0f;
+        }
 
         sunTrans = glm::translate(sunTrans, lightPos);
         sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
