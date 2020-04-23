@@ -245,9 +245,9 @@ void Application::mainLoop()
     glm::mat4 trans(1.0f);
 
     Shader sunShader("direction-light");
-    glm::mat4 sunTrans(1.0f);
-    sunTrans = glm::translate(sunTrans, lightPos);
-    sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
+    // glm::mat4 sunTrans(1.0f);
+    // sunTrans = glm::translate(sunTrans, lightPos);
+    // sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
 
     unsigned int sunTex;
     glGenTextures(1, &sunTex);
@@ -279,7 +279,6 @@ void Application::mainLoop()
         glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        trans = glm::rotate(trans, glm::radians(((float)glfwGetTime()) * 0.04f), glm::vec3(0.0f, 1.0f, 0.0f));
         phoneShader.use();
         phoneShader.setInt("texturePtr", 0);
         phoneShader.setMat4("model", trans);
@@ -294,6 +293,12 @@ void Application::mainLoop()
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        glm::mat4 sunTrans(1.0f);
+        lightPos.x = sinf((float)glfwGetTime()) * 3.0f;
+        lightPos.z = cosf((float)glfwGetTime()) * 3.0f;
+
+        sunTrans = glm::translate(sunTrans, lightPos);
+        sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
 
         sunShader.use();
         sunShader.setInt("texturePtr", 0);
