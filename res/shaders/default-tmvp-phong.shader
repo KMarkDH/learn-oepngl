@@ -4,16 +4,16 @@ layout (location = 0) in vec3 vCoor;
 layout (location = 1) in vec2 tCoor;
 layout (location = 2) in vec3 iNormal;
 
-out vec3 vetPos;
-out vec2 textureCoor;
-out vec3 aNormal;
-out vec3 aLightPos;
-
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 perspective;
-
 uniform vec3 lightPos;
+
+out vec2 textureCoor;
+out vec3 aNormal;
+out vec3 aLightPos;
+out vec3 vetPos;
+
 
 void main()
 {
@@ -21,16 +21,17 @@ void main()
     textureCoor = tCoor;
     //计算法线矩阵,inverse开销巨大,应该在cpu中进行计算
     aNormal = mat3(transpose(inverse(view * model))) * iNormal;
-    vetPos = (view * model * vec4(vCoor.xyz, 1.0f)).xyz;
     aLightPos = (view * vec4(lightPos.xyz, 1.0f)).xyz;
+
+    vetPos = (view * model * vec4(vCoor.xyz, 1.0f)).xyz;
 }
 
 @fragment
 #version 330 core
-in vec3 aNormal;
 in vec2 textureCoor;
-in vec3 vetPos;
+in vec3 aNormal;
 in vec3 aLightPos;
+in vec3 vetPos;
 
 uniform sampler2D texturePtr;
 uniform vec3 lightColor;

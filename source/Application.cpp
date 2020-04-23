@@ -129,16 +129,15 @@ void Application::processKeyboard()
         cameraPos -= glm::normalize(glm::cross(cameraUp, cameraFront)) * 0.1f;
     }
 
-    if (glfwGetKey(m_window, GLFW_KEY_F1) == GLFW_PRESS)
-    {
-        curso_enable = false;
-        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-
-    if (glfwGetKey(m_window, GLFW_KEY_F2) == GLFW_PRESS)
+    if (glfwGetKey(m_window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
     {
         curso_enable = true;
         glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+    else
+    {
+        curso_enable = false;
+        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
 
@@ -305,7 +304,7 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Shader phoneShader("default-tmvp-gouraud");
+    Shader phoneShader("mvp-phong-review");
 
 
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -335,17 +334,17 @@ void Application::mainLoop()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         phoneShader.use();
-        phoneShader.setInt("texturePtr", 0);
-        phoneShader.setMat4("model", trans);
-        phoneShader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
-        phoneShader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
-        phoneShader.setVec3("lightColor", lightColor);
-        phoneShader.setVec3("lightPos", lightPos);
-        phoneShader.setVec3("viewPos", cameraPos);
+        phoneShader.setInt("uTexture0", 0);
+        phoneShader.setMat4("uModel", trans);
+        phoneShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
+        phoneShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
+        phoneShader.setVec3("uLightColor", lightColor);
+        phoneShader.setVec3("uLightPos", lightPos);
+        // phoneShader.setVec3("viewPos", cameraPos);
 
-        phoneShader.setFloat("ambientStrength", ambientStrength);
-        phoneShader.setFloat("diffuseStrength", diffuseStrength);
-        phoneShader.setFloat("specularStrength", specularStrength);
+        phoneShader.setFloat("uAmbientStrength", ambientStrength);
+        phoneShader.setFloat("uDiffuseStrength", diffuseStrength);
+        phoneShader.setFloat("uSpecularStrength", specularStrength);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
