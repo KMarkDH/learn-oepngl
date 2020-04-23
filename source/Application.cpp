@@ -9,14 +9,23 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include <Shader.h>
 
+static bool curso_enable = false;
 glm::vec3 cameraPos(0.0f, 0.0f, -3.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);
 
 glm::vec3 lightColor(1.0f, 0.0f, 0.0f);
 glm::vec3 lightPos(0.0f, 0.0f, 3.0f);
+
+static float ambientStrength = 1.0f;
+static float diffuseStrength = 1.0f;
+static float specularStrength = 1.0f;
 
 std::string Application::WorkPath;
 
@@ -39,6 +48,7 @@ void Application::procPath(std::string arg)
 
 bool Application::init(std::string name)
 {
+    const char* glsl_version = "#version 150";
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -53,7 +63,7 @@ bool Application::init(std::string name)
     glfwSetWindowUserPointer(window, this);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
     auto frameCB = [](GLFWwindow* w, int width, int height) {
         static_cast<Application*>(glfwGetWindowUserPointer(w))->proceeFrameResize(width, height);
     };
@@ -67,12 +77,27 @@ bool Application::init(std::string name)
 
     glEnable(GL_DEPTH_TEST);
     stbi_set_flip_vertically_on_load(1);
+
+    //setup imgui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    //init imgui style
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
     
     return true;
 }
 
 Application::~Application()
 {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwTerminate();
 }
 
@@ -103,6 +128,18 @@ void Application::processKeyboard()
     {
         cameraPos -= glm::normalize(glm::cross(cameraUp, cameraFront)) * 0.1f;
     }
+
+    if (glfwGetKey(m_window, GLFW_KEY_F1) == GLFW_PRESS)
+    {
+        curso_enable = false;
+        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+
+    if (glfwGetKey(m_window, GLFW_KEY_F2) == GLFW_PRESS)
+    {
+        curso_enable = true;
+        glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 }
 
 double lastX, lastY;
@@ -111,6 +148,7 @@ bool firstMove = true;;
 double pitch = 0, yaw = 0;
 void Application::processCursor(double xpos, double ypos)
 {
+    if (!curso_enable) return;
     if (firstMove)
     {
         lastX = xpos;
@@ -276,6 +314,22 @@ void Application::mainLoop()
         glfwSwapBuffers(m_window);
         glfwPollEvents();
 
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        {
+            ImGui::Begin("Shader Data");
+            
+            ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
+            ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
+            ImGui::SliderFloat("specular strength", &specularStrength, 0.0f, 1.0f);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
+        ImGui::Render();
+
         glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -287,6 +341,10 @@ void Application::mainLoop()
         phoneShader.setVec3("lightColor", lightColor);
         phoneShader.setVec3("lightPos", lightPos);
         phoneShader.setVec3("viewPos", cameraPos);
+
+        phoneShader.setFloat("ambientStrength", ambientStrength);
+        phoneShader.setFloat("diffuseStrength", diffuseStrength);
+        phoneShader.setFloat("specularStrength", specularStrength);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -310,6 +368,8 @@ void Application::mainLoop()
         glBindTexture(GL_TEXTURE_2D, sunTex);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
         this->processKeyboard();
     }

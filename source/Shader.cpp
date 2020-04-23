@@ -21,6 +21,12 @@ void Shader::use()
     glUseProgram(m_shader);
 }
 
+void Shader::setFloat(std::string uniform, float value)
+{
+    unsigned int u = glGetUniformLocation(m_shader, uniform.c_str());
+    glUniform1f(u, value);
+}
+
 void Shader::setInt(std::string uniform, int value)
 {
     unsigned int u = glGetUniformLocation(m_shader, uniform.c_str());
