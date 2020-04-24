@@ -89,7 +89,7 @@ void Shader::createShader(std::string fileName)
     if (!success)
     {
         glGetShaderInfoLog(vShader, 512, 0, infoLog);
-        std::cout << "Vertex Shader Compile Error. " << infoLog << std::endl;
+        std::clog << "Vertex Shader Compile Error. " << infoLog << std::endl;
     }
 
     unsigned int fShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -100,7 +100,7 @@ void Shader::createShader(std::string fileName)
     if (!success)
     {
         glGetShaderInfoLog(fShader, 512, 0, infoLog);
-        std::cout << "Fragment Shader Compile Error. " << infoLog << std::endl;
+        std::clog << "Fragment Shader Compile Error. " << infoLog << std::endl;
     }
 
     m_shader = glCreateProgram();
@@ -112,7 +112,7 @@ void Shader::createShader(std::string fileName)
     if (!success)
     {
         glGetProgramInfoLog(m_shader, 512, 0, infoLog);
-        std::cout << "Program Link Error. " << infoLog << std::endl;
+        std::clog << "Program Link Error. " << infoLog << std::endl;
     }
 
     glDeleteShader(vShader);

@@ -14,6 +14,22 @@
 #include "imgui_impl_opengl3.h"
 
 #include <Shader.h>
+#include <sstream>
+
+static std::stringstream mLog;
+static std::stringstream mError;
+
+void drawConsole()
+{
+    ImGui::Begin("console");
+    {
+        ImGui::Text(mLog.str().c_str());
+        const ImVec4 errorColor(1.0f, 0.0f, 0.0f, 1.0f);
+        ImGui::TextColored(errorColor, mError.str().c_str());
+    }
+    
+    ImGui::End();
+}
 
 static bool curso_enable = false;
 glm::vec3 cameraPos(0.0f, 0.0f, -3.0f);
@@ -43,6 +59,10 @@ std::string Application::WorkPath;
 
 Application::Application(std::string name, std::string arg)
 {
+    std::cout.rdbuf(mLog.rdbuf());
+    std::cerr.rdbuf(mError.rdbuf());
+    std::clog.rdbuf(mError.rdbuf());
+
     procPath(arg);
     init(name);
 }
@@ -336,6 +356,8 @@ void Application::mainLoop()
         ImGui::NewFrame();
 
         {
+            drawConsole();
+
             ImGui::Begin("Shader Data");
             ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
             ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
