@@ -16,6 +16,8 @@
 #include <Shader.h>
 #include <sstream>
 
+#include "Texture.h"
+
 static std::stringstream mLog;
 static std::stringstream mError;
 
@@ -23,6 +25,11 @@ void drawConsole()
 {
     ImGui::Begin("console");
     {
+        ImGui::TextColored
+        (
+            ImVec4(0.0f, 1.0f, 1.0f, 1.0f),
+            "Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate
+        );
         ImGui::Text(mLog.str().c_str());
         const ImVec4 errorColor(1.0f, 0.0f, 0.0f, 1.0f);
         ImGui::TextColored(errorColor, mError.str().c_str());
@@ -301,17 +308,23 @@ void Application::mainLoop()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    std::string filePath = Application::getFilePath("/res/textures/container.jpg");
+    std::string filePath = Application::getFilePath("/res/textures/container2.png");
 
     int width, height, channel;
     unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channel, 0);
     if (data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(data);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    Texture container2("container2.png", 0, TextureType::CLAMP_EDGT_MIPMAP);
+    Texture container2_specular("container2_specular.png", 1, TextureType::CLAMP_EDGT_MIPMAP);
+    Texture lighting_maps_specular_color("lighting_maps_specular_color.png", 2, TextureType::CLAMP_EDGT_MIPMAP);
+    Texture matrix("matrix.jpg", 3, TextureType::CLAMP_EDGT_MIPMAP);
+    
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -342,6 +355,8 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    
+
     Shader phoneShader("default-material");
 
 
@@ -358,19 +373,17 @@ void Application::mainLoop()
         {
             drawConsole();
 
-            ImGui::Begin("Shader Data");
-            ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
-            ImGui::SliderFloat("specular strength", &specularStrength, 0.0f, 1.0f);
-            ImGui::ColorEdit3("light color", (float*)&lightColor);
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-
             ImGui::Begin("Material");
             ImGui::ColorEdit3("ambient", (float*)&lightMaterial.ambient);
+            ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
+
             ImGui::ColorEdit3("diffuse", (float*)&lightMaterial.diffuse);
+            ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
+
             ImGui::ColorEdit3("specular", (float*)&lightMaterial.specular);
+            ImGui::SliderFloat("specular strength", &specularStrength, 0.0f, 1.0f);
             ImGui::SliderInt("shinnese", &lightMaterial.shinnese, 8, 1024);
+
             ImGui::End();
         }
         ImGui::Render();
@@ -379,7 +392,6 @@ void Application::mainLoop()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         phoneShader.use();
-        phoneShader.setInt("uTexture0", 0);
         phoneShader.setMat4("uModel", trans);
         phoneShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         phoneShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
@@ -394,9 +406,17 @@ void Application::mainLoop()
         phoneShader.setVec3("lightMaterial.diffuse", lightMaterial.diffuse);
         phoneShader.setVec3("lightMaterial.specular", lightMaterial.specular);
         phoneShader.setInt("lightMaterial.shinnese", lightMaterial.shinnese);
+
+        phoneShader.setInt("lightMaterial.diffuseTex", container2.getpointer());
+        phoneShader.setInt("lightMaterial.specularTex", lighting_maps_specular_color.getpointer());
+        phoneShader.setInt("lightMaterial.emissionTex", matrix.getpointer());
         
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        // glActiveTexture(GL_TEXTURE0);
+        // glBindTexture(GL_TEXTURE_2D, texture);
+        container2.bind();
+        container2_specular.bind();
+        lighting_maps_specular_color.bind();
+        matrix.bind();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 

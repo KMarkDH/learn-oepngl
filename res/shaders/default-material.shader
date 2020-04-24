@@ -36,6 +36,10 @@ struct Light
     vec3 diffuse;
     vec3 specular;
 
+    sampler2D diffuseTex;
+    sampler2D specularTex;
+    sampler2D emissionTex;
+
     int shinnese;
 };
 
@@ -44,7 +48,6 @@ in vec3 Normal;
 in vec3 LightPos;
 in vec3 VetCoor;
 
-uniform sampler2D uTexture0;
 uniform Light lightMaterial;
 uniform float uAmbientStrength;
 uniform float uDiffuseStrength;
@@ -58,16 +61,13 @@ void main()
     vec3 viewDir = normalize(-VetCoor);
     vec3 reflectDir = reflect(-lightDir, Normal);
     
-    vec3 ambient = uAmbientStrength * lightMaterial.ambient;
+    vec4 ambient = uAmbientStrength * vec4(lightMaterial.diffuse.xyz, 1.0f) * texture(lightMaterial.diffuseTex, TexCoor);
 
     float diffuseFct = max(dot(lightDir, Normal), 0.0f);
-    vec3 diffuse = diffuseFct * uDiffuseStrength * lightMaterial.diffuse;
+    vec4 diffuse = diffuseFct * uDiffuseStrength * vec4(lightMaterial.diffuse.xyz, 1.0f) * texture(lightMaterial.diffuseTex, TexCoor);
 
     float specularFct = pow(max(dot(reflectDir, viewDir), 0.0f), lightMaterial.shinnese);
-    vec3 specular = specularFct * uSpecularStrength * lightMaterial.specular;
+    vec4 specular = specularFct * uSpecularStrength * vec4(lightMaterial.specular.xyz, 1.0f) * texture(lightMaterial.specularTex, TexCoor);
 
-    vec3 result = ambient + diffuse + specular;
-    //为了更好地观察，先将箱子设为白色
-    //texture(uTexture0, TexCoor)
-    FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f) * vec4(result.xyz, 1.0f);
+    FragColor = ambient + diffuse + specular + texture(lightMaterial.emissionTex, TexCoor);
 }
