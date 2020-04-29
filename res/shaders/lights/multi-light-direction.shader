@@ -8,21 +8,18 @@ layout (location = 2) in vec3 normal;
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uPerspective;
-uniform vec3 uLightPos;
 
 out vec2 TexCoor;
 out vec3 Normal;
-out vec3 LightPos;
 out vec3 VetCoor;
 
 void main()
 {
     gl_Position = uPerspective * uView * uModel * vec4(vertex.xyz, 1.0f);
     TexCoor = uv;
-    Normal = mat3(transpose(inverse(uView * uModel))) * normal;
-
+    
+    Normal = mat3(transpose(inverse(uModel))) * normal;
     //不要再这里用mat3将uview或者uModel转为mat3,暂时还不明白为什么
-    LightPos = uLightPos;
     VetCoor = vec3((uModel * vec4(vertex.xyz, 1.0f)).xyz);
 }
 
@@ -56,14 +53,14 @@ uniform vec3 viewPos;
 uniform Material material;
 uniform DirectionLight directionLight;
 
-vec4 calcDirLight(DirectionLight dirLight, vec3 normal, vec3 viewDir)
+vec3 calcDirLight(DirectionLight dirLight, vec3 normal, vec3 viewDir)
 {
     vec3 lightDir = normalize(-dirLight.lightDirection);
-    vec3 reflectDir = reflect(-lightDir, Normal);
+    vec3 reflectDir = reflect(-lightDir, normal);
 
-    vec4 ambient = vec4(dirLight.ambient.xyz, 1.0f) * texture(material.ambientTex, TexCoor);
-    vec4 diffuse = max(dot(lightDir, Normal), 0) * vec4(dirLight.diffuse.xyz, 1.0f) * texture(material.diffuseTex, TexCoor);
-    vec4 specular = pow(max(dot(reflectDir, viewDir), 0), material.shinnese) * vec4(dirLight.specular.xyz, 1.0f) * texture(material.specularTex, TexCoor);
+    vec3 ambient = dirLight.ambient * vec3(texture(material.ambientTex, TexCoor));
+    vec3 diffuse = max(dot(lightDir, normal), 0) * dirLight.diffuse * vec3(texture(material.diffuseTex, TexCoor));
+    vec3 specular = pow(max(dot(reflectDir, viewDir), 0), material.shinnese) * dirLight.specular.xyz * vec3(texture(material.specularTex, TexCoor));
 
     return ambient + diffuse + specular;
 }
@@ -72,7 +69,7 @@ out vec4 FragColor;
 
 void main()
 {
-
-    vec4 directionLight = calcDirLight(directionLight, Normal, normalize(viewPos - Normal));
-    FragColor = directionLight;
+    vec3 norm = normalize(Normal);
+    vec3 directionLight = calcDirLight(directionLight, norm, normalize(viewPos - VetCoor));
+    FragColor = vec4(directionLight.xyz, 1.0f);
 }

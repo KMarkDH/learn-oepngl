@@ -388,7 +388,7 @@ void Application::mainLoop()
             ImGui::ColorEdit3("ambient", (float*)&directionLight.ambient);
             ImGui::ColorEdit3("diffuse", (float*)&directionLight.diffuse);
             ImGui::ColorEdit3("specular", (float*)&directionLight.specular);
-            ImGui::SliderFloat3("direction", (float*)&directionLight.lightDirection, -1.0f, 1.0f);
+            ImGui::InputFloat3("direction", (float*)&directionLight.lightDirection, 2);
             ImGui::End();
         }
         ImGui::Render();
@@ -400,13 +400,12 @@ void Application::mainLoop()
         phoneShader.setMat4("uModel", trans);
         phoneShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         phoneShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
-        phoneShader.setVec3("uLightPos", lightPos);
         phoneShader.setVec3("viewPos", cameraPos);
         phoneShader.setInt("material.shinnese", material.shinnese);
 
         phoneShader.setInt("material.ambientTex", container2.getpointer());
         phoneShader.setInt("material.diffuseTex", container2.getpointer());
-        phoneShader.setInt("material.specularTex", container2_specular.getpointer());
+        phoneShader.setInt("material.specularTex", container2.getpointer());
 
         phoneShader.setVec3("directionLight.ambient", directionLight.ambient);
         phoneShader.setVec3("directionLight.diffuse", directionLight.diffuse);
