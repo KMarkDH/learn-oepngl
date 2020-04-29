@@ -21,6 +21,16 @@
 static std::stringstream mLog;
 static std::stringstream mError;
 
+
+struct DirectionLight
+{
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+
+    glm::vec3 lightDirection;
+};
+
 void drawConsole()
 {
     ImGui::Begin("console");
@@ -52,14 +62,10 @@ static float specularStrength = 1.0f;
 
 struct Material
 {
-    glm::vec3 ambient = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 specular = glm::vec3(1.0f, 1.0f, 1.0f);
-
     int shinnese = 8;
 };
 
-static Material lightMaterial; 
+static Material material; 
 static bool lightRotate = false;
 
 std::string Application::WorkPath;
@@ -357,10 +363,11 @@ void Application::mainLoop()
 
     
 
-    Shader phoneShader("default-material");
+    Shader phoneShader("lights/multi-light-direction");
 
 
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    DirectionLight directionLight;
     while (!glfwWindowShouldClose(m_window))
     {
         glfwSwapBuffers(m_window);
@@ -374,16 +381,14 @@ void Application::mainLoop()
             drawConsole();
 
             ImGui::Begin("Material");
-            ImGui::ColorEdit3("ambient", (float*)&lightMaterial.ambient);
-            ImGui::SliderFloat("ambient strength", &ambientStrength, 0.0f, 1.0f);
+            ImGui::SliderInt("shinnese", &material.shinnese, 8, 1024);
+            ImGui::End();
 
-            ImGui::ColorEdit3("diffuse", (float*)&lightMaterial.diffuse);
-            ImGui::SliderFloat("diffuse strength", &diffuseStrength, 0.0f, 1.0f);
-
-            ImGui::ColorEdit3("specular", (float*)&lightMaterial.specular);
-            ImGui::SliderFloat("specular strength", &specularStrength, 0.0f, 1.0f);
-            ImGui::SliderInt("shinnese", &lightMaterial.shinnese, 8, 1024);
-
+            ImGui::Begin("Direction-Light");
+            ImGui::ColorEdit3("ambient", (float*)&directionLight.ambient);
+            ImGui::ColorEdit3("diffuse", (float*)&directionLight.diffuse);
+            ImGui::ColorEdit3("specular", (float*)&directionLight.specular);
+            ImGui::SliderFloat3("direction", (float*)&directionLight.lightDirection, -1.0f, 1.0f);
             ImGui::End();
         }
         ImGui::Render();
@@ -396,27 +401,21 @@ void Application::mainLoop()
         phoneShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         phoneShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
         phoneShader.setVec3("uLightPos", lightPos);
-        // phoneShader.setVec3("viewPos", cameraPos);
+        phoneShader.setVec3("viewPos", cameraPos);
+        phoneShader.setInt("material.shinnese", material.shinnese);
 
-        phoneShader.setFloat("uAmbientStrength", ambientStrength);
-        phoneShader.setFloat("uDiffuseStrength", diffuseStrength);
-        phoneShader.setFloat("uSpecularStrength", specularStrength);
+        phoneShader.setInt("material.ambientTex", container2.getpointer());
+        phoneShader.setInt("material.diffuseTex", container2.getpointer());
+        phoneShader.setInt("material.specularTex", container2_specular.getpointer());
 
-        phoneShader.setVec3("lightMaterial.ambient", lightMaterial.ambient);
-        phoneShader.setVec3("lightMaterial.diffuse", lightMaterial.diffuse);
-        phoneShader.setVec3("lightMaterial.specular", lightMaterial.specular);
-        phoneShader.setInt("lightMaterial.shinnese", lightMaterial.shinnese);
-
-        phoneShader.setInt("lightMaterial.diffuseTex", container2.getpointer());
-        phoneShader.setInt("lightMaterial.specularTex", lighting_maps_specular_color.getpointer());
-        phoneShader.setInt("lightMaterial.emissionTex", matrix.getpointer());
+        phoneShader.setVec3("directionLight.ambient", directionLight.ambient);
+        phoneShader.setVec3("directionLight.diffuse", directionLight.diffuse);
+        phoneShader.setVec3("directionLight.specular", directionLight.specular);
+        phoneShader.setVec3("directionLight.lightDirection", directionLight.lightDirection);
         
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, texture);
         container2.bind();
         container2_specular.bind();
-        lighting_maps_specular_color.bind();
-        matrix.bind();
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
