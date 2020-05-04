@@ -306,6 +306,14 @@ void Application::mainLoop()
             -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
             -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f};
 
+    glm::vec3 pointLightPositions[] = 
+    {
+        glm::vec3( 0.7f,  0.2f,  2.0f),
+        glm::vec3( 2.3f, -3.3f, -4.0f),
+        glm::vec3(-4.0f,  2.0f, -12.0f),
+        glm::vec3( 0.0f,  0.0f, -3.0f)
+    };
+
     unsigned int VAO = 0, VBO = 0;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -387,9 +395,10 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Shader phoneShader("lights/multi-lights-flashlight");
+    Shader phoneShader("lights/multi-lights-all");
 
-    glm::vec3 cubePositions[] = {
+    glm::vec3 cubePositions[] = 
+    {
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(2.0f, 5.0f, -15.0f),
         glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -399,13 +408,14 @@ void Application::mainLoop()
         glm::vec3(1.3f, -2.0f, -2.5f),
         glm::vec3(1.5f, 2.0f, -2.5f),
         glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
+        glm::vec3(-1.3f, 1.0f, -1.5f)
+    };
 
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     DirectionLight directionLight;
-    Light light;
+    Light lights[4];
     FlashLight flashLight;
-    bool hello = true;
+
     while (!glfwWindowShouldClose(m_window))
     {
         glfwSwapBuffers(m_window);
@@ -425,40 +435,46 @@ void Application::mainLoop()
 
             if (ImGui::CollapsingHeader("Direction-Light"))
             {
-                // ImGui::ColorEdit3("ambient", (float *)&directionLight.ambient);
-                // ImGui::ColorEdit3("diffuse", (float *)&directionLight.diffuse);
-                // ImGui::ColorEdit3("specular", (float *)&directionLight.specular);
-                // ImGui::InputFloat3("direction", (float *)&directionLight.lightDirection, 2);
+                ImGui::ColorEdit3("DirectionLight_ambient", (float *)&directionLight.ambient);
+                ImGui::ColorEdit3("DirectionLight_diffuse", (float *)&directionLight.diffuse);
+                ImGui::ColorEdit3("DirectionLight_specular", (float *)&directionLight.specular);
+                ImGui::InputFloat3("DirectionLight_direction", (float *)&directionLight.lightDirection, 2);
             }
 
-            if (ImGui::CollapsingHeader("Light"))
+            if (ImGui::CollapsingHeader("PointLights"))
             {
-                // ImGui::InputFloat3("position", (float *)&light.position, 2);
-                // ImGui::ColorEdit3("ambight", (float *)&light.ambient, 2);
-                // ImGui::ColorEdit3("diffuse", (float *)&light.diffuse, 2);
-                // ImGui::ColorEdit3("specular", (float *)&light.specular, 2);
-                // ImGui::InputFloat("contant", (float *)&light.contant, 2);
-                // ImGui::InputFloat("linear", (float *)&light.linear, 2);
-                // ImGui::InputFloat("quadraitc", (float *)&light.quadraitc, 2);
+                ImGui::ColorEdit3("PointLights_ambight", (float *)&lights[0].ambient, 2);
+                ImGui::ColorEdit3("PointLights_diffuse", (float *)&lights[0].diffuse, 2);
+                ImGui::ColorEdit3("PointLights_specular", (float *)&lights[0].specular, 2);
+                ImGui::InputFloat("PointLights_contant", (float *)&lights[0].contant, 2);
+                ImGui::InputFloat("PointLights_linear", (float *)&lights[0].linear, 2);
+                ImGui::InputFloat("PointLights_quadraitc", (float *)&lights[0].quadraitc, 2);
+            }
+
+            for (int i = 1; i < 4; ++i)
+            {
+                lights[i].ambient = lights[0].ambient;
+                lights[i].diffuse = lights[0].diffuse;
+                lights[i].specular = lights[0].specular;
+                lights[i].contant = lights[0].contant;
+                lights[i].linear = lights[0].linear;
+                lights[i].quadraitc = lights[0].quadraitc;
             }
 
             if (ImGui::CollapsingHeader("FlashLight"))
             {
-                ImGui::ColorEdit3("ambight", (float *)&flashLight.ambient, 2);
-                ImGui::ColorEdit3("diffuse", (float *)&flashLight.diffuse, 2);
-                ImGui::ColorEdit3("specular", (float *)&flashLight.specular, 2);
+                ImGui::ColorEdit3("FlashLight_ambight", (float *)&flashLight.ambient, 2);
+                ImGui::ColorEdit3("FlashLight_diffuse", (float *)&flashLight.diffuse, 2);
+                ImGui::ColorEdit3("FlashLight_specular", (float *)&flashLight.specular, 2);
 
-                ImGui::SliderFloat("cutOff", &flashLight.cutOff, 5, flashLight.outerCutOff, "%.1f");
-                ImGui::SliderFloat("outerCutOff", &flashLight.outerCutOff, flashLight.cutOff, 90, "%.1f");
+                ImGui::SliderFloat("FlashLight_cutOff", &flashLight.cutOff, 5, flashLight.outerCutOff, "%.1f");
+                ImGui::SliderFloat("FlashLight_outerCutOff", &flashLight.outerCutOff, flashLight.cutOff, 90, "%.1f");
             }
-
-            
-
             ImGui::End();
         }
         ImGui::Render();
 
-        glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
+        glClearColor(directionLight.ambient.x, directionLight.ambient.y, directionLight.ambient.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         phoneShader.use();
@@ -471,6 +487,23 @@ void Application::mainLoop()
         phoneShader.setInt("material.ambientTex", container2.getpointer());
         phoneShader.setInt("material.diffuseTex", container2.getpointer());
         phoneShader.setInt("material.specularTex", container2_specular.getpointer());
+
+        phoneShader.setVec3("directionLight.direction", directionLight.lightDirection);
+        phoneShader.setVec3("directionLight.ambient", directionLight.ambient);
+        phoneShader.setVec3("directionLight.diffuse", directionLight.diffuse);
+        phoneShader.setVec3("directionLight.specular", directionLight.specular);
+
+        for (int i = 0; i < 4; ++i)
+        {
+            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].ambient"), lights[i].ambient);
+            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].diffuse"), lights[i].diffuse);
+            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].specular"), lights[i].specular);
+
+            phoneShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].contant"), lights[i].contant);
+            phoneShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].linear"), lights[i].linear);
+            phoneShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].quadraic"), lights[i].quadraitc);
+            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].position"), pointLightPositions[i]);
+        }
 
         phoneShader.setVec3("flashLight.position", cameraPos);
         phoneShader.setVec3("flashLight.direction", cameraFront);
@@ -496,14 +529,8 @@ void Application::mainLoop()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        glm::mat4 sunTrans(1.0f);
-
-        sunTrans = glm::translate(sunTrans, light.position);
-        sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
-
         sunShader.use();
         sunShader.setInt("texturePtr", 0);
-        sunShader.setMat4("model", sunTrans);
         sunShader.setMat4("view", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
         sunShader.setMat4("perspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
 
@@ -511,8 +538,14 @@ void Application::mainLoop()
         glBindTexture(GL_TEXTURE_2D, sunTex);
         glBindVertexArray(VAO);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
+        for (int i = 0; i < std::size(pointLightPositions); ++i)
+        {
+            glm::mat4 sunTrans(1.0f);
+            sunTrans = glm::translate(sunTrans, pointLightPositions[i]);
+            sunTrans = glm::scale(sunTrans, glm::vec3(0.1f, 0.1f, 0.1f));
+            sunShader.setMat4("model", sunTrans);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         this->processKeyboard();
