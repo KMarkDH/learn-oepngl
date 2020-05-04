@@ -55,12 +55,20 @@ struct Light
     float quadraitc = 0.0f;
 };
 
+struct FlashLight
+{
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+
+    float cutOff = 5.0f;
+    float outerCutOff = 10.f;
+};
+
 void drawConsole()
 {
-
     if (ImGui::CollapsingHeader("Debug"))
     {
-
         ImGui::TextColored(
             ImVec4(0.0f, 1.0f, 1.0f, 1.0f),
             "Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -379,7 +387,7 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Shader phoneShader("lights/multi-lights-point");
+    Shader phoneShader("lights/multi-lights-flashlight");
 
     glm::vec3 cubePositions[] = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -396,6 +404,7 @@ void Application::mainLoop()
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     DirectionLight directionLight;
     Light light;
+    FlashLight flashLight;
     bool hello = true;
     while (!glfwWindowShouldClose(m_window))
     {
@@ -424,14 +433,26 @@ void Application::mainLoop()
 
             if (ImGui::CollapsingHeader("Light"))
             {
-                ImGui::InputFloat3("position", (float *)&light.position, 2);
-                ImGui::ColorEdit3("ambight", (float *)&light.ambient, 2);
-                ImGui::ColorEdit3("diffuse", (float *)&light.diffuse, 2);
-                ImGui::ColorEdit3("specular", (float *)&light.specular, 2);
-                ImGui::InputFloat("contant", (float *)&light.contant, 2);
-                ImGui::InputFloat("linear", (float *)&light.linear, 2);
-                ImGui::InputFloat("quadraitc", (float *)&light.quadraitc, 2);
+                // ImGui::InputFloat3("position", (float *)&light.position, 2);
+                // ImGui::ColorEdit3("ambight", (float *)&light.ambient, 2);
+                // ImGui::ColorEdit3("diffuse", (float *)&light.diffuse, 2);
+                // ImGui::ColorEdit3("specular", (float *)&light.specular, 2);
+                // ImGui::InputFloat("contant", (float *)&light.contant, 2);
+                // ImGui::InputFloat("linear", (float *)&light.linear, 2);
+                // ImGui::InputFloat("quadraitc", (float *)&light.quadraitc, 2);
             }
+
+            if (ImGui::CollapsingHeader("FlashLight"))
+            {
+                ImGui::ColorEdit3("ambight", (float *)&flashLight.ambient, 2);
+                ImGui::ColorEdit3("diffuse", (float *)&flashLight.diffuse, 2);
+                ImGui::ColorEdit3("specular", (float *)&flashLight.specular, 2);
+
+                ImGui::SliderFloat("cutOff", &flashLight.cutOff, 5, flashLight.outerCutOff, "%.1f");
+                ImGui::SliderFloat("outerCutOff", &flashLight.outerCutOff, flashLight.cutOff, 90, "%.1f");
+            }
+
+            
 
             ImGui::End();
         }
@@ -451,13 +472,15 @@ void Application::mainLoop()
         phoneShader.setInt("material.diffuseTex", container2.getpointer());
         phoneShader.setInt("material.specularTex", container2_specular.getpointer());
 
-        phoneShader.setVec3("light.position", light.position);
-        phoneShader.setVec3("light.ambient", light.ambient);
-        phoneShader.setVec3("light.diffuse", light.diffuse);
-        phoneShader.setVec3("light.specular", light.specular);
-        phoneShader.setFloat("light.contant", light.contant);
-        phoneShader.setFloat("light.linear", light.linear);
-        phoneShader.setFloat("light.quadraitc", light.quadraitc);
+        phoneShader.setVec3("flashLight.position", cameraPos);
+        phoneShader.setVec3("flashLight.direction", cameraFront);
+        phoneShader.setFloat("flashLight.cutOff", glm::cos(glm::radians(flashLight.cutOff)));
+        phoneShader.setFloat("flashLight.outerCutOff", glm::cos(glm::radians(flashLight.outerCutOff)));
+        
+
+        phoneShader.setVec3("flashLight.ambient", flashLight.ambient);
+        phoneShader.setVec3("flashLight.diffuse", flashLight.diffuse);
+        phoneShader.setVec3("flashLight.specular", flashLight.specular);
 
         container2.bind();
         container2_specular.bind();
