@@ -4,7 +4,7 @@
 #define TEXTURE_LOCATION(pot) (GL_TEXTURE0 + pot)
 
 //偷懒直接把初始化写在构造函数里
-Texture::Texture(std::string filename, unsigned int pointer, TextureType type)
+tTexture::tTexture(std::string filename, unsigned int pointer, TextureType type)
 :m_type(type)
 ,pointer(pointer)
 {
@@ -45,13 +45,13 @@ Texture::Texture(std::string filename, unsigned int pointer, TextureType type)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::bind() const
+void tTexture::bind() const
 {
     glActiveTexture(TEXTURE_LOCATION(pointer));
     glBindTexture(GL_TEXTURE_2D, m_texture);
 }
 
-Texture::~Texture()
+tTexture::~tTexture()
 {
 
 }

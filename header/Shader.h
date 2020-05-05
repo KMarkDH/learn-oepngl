@@ -8,6 +8,15 @@ class Shader
 public:
     Shader() = delete;
     Shader(std::string name);
+    Shader(Shader& shader)
+    :m_shader(shader.m_shader)
+    {
+
+    }
+    const Shader operator=(Shader shader)
+    {
+        return Shader(shader);
+    }
 
     ~Shader();
 

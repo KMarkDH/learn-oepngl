@@ -13,6 +13,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "Model.h"
 #include <Shader.h>
 #include <sstream>
 
@@ -361,10 +362,10 @@ void Application::mainLoop()
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Texture container2("container2.png", 0, TextureType::CLAMP_EDGT_MIPMAP);
-    Texture container2_specular("container2_specular.png", 1, TextureType::CLAMP_EDGT_MIPMAP);
-    Texture lighting_maps_specular_color("lighting_maps_specular_color.png", 2, TextureType::CLAMP_EDGT_MIPMAP);
-    Texture matrix("matrix.jpg", 3, TextureType::CLAMP_EDGT_MIPMAP);
+    tTexture container2("container2.png", 0, TextureType::CLAMP_EDGT_MIPMAP);
+    tTexture container2_specular("container2_specular.png", 1, TextureType::CLAMP_EDGT_MIPMAP);
+    tTexture lighting_maps_specular_color("lighting_maps_specular_color.png", 2, TextureType::CLAMP_EDGT_MIPMAP);
+    tTexture matrix("matrix.jpg", 3, TextureType::CLAMP_EDGT_MIPMAP);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -415,6 +416,9 @@ void Application::mainLoop()
     DirectionLight directionLight;
     Light lights[4];
     FlashLight flashLight;
+
+    Shader modelShader("model/model");
+    Model model(Application::getFilePath("/res/model/nanosuit/nanosuit.obj").c_str());
 
     while (!glfwWindowShouldClose(m_window))
     {
@@ -474,60 +478,43 @@ void Application::mainLoop()
         }
         ImGui::Render();
 
-        glClearColor(directionLight.ambient.x, directionLight.ambient.y, directionLight.ambient.z, 1.0f);
+        glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        phoneShader.use();
-        //phoneShader.setMat4("uModel", trans);
-        phoneShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
-        phoneShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
-        phoneShader.setVec3("viewPos", cameraPos);
+        modelShader.use();
+        modelShader.setMat4("uModel", trans);
+        modelShader.setMat4("uView", glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp));
+        modelShader.setMat4("uPerspective", glm::perspective(glm::radians(45.0f), (float)(640.0f / 360.0f), 0.1f, 100.0f));
+        modelShader.setVec3("viewPos", cameraPos);
 
-        phoneShader.setInt("material.shinnese", material.shinnese);
-        phoneShader.setInt("material.ambientTex", container2.getpointer());
-        phoneShader.setInt("material.diffuseTex", container2.getpointer());
-        phoneShader.setInt("material.specularTex", container2_specular.getpointer());
-
-        phoneShader.setVec3("directionLight.direction", directionLight.lightDirection);
-        phoneShader.setVec3("directionLight.ambient", directionLight.ambient);
-        phoneShader.setVec3("directionLight.diffuse", directionLight.diffuse);
-        phoneShader.setVec3("directionLight.specular", directionLight.specular);
+        modelShader.setVec3("directionLight.direction", directionLight.lightDirection);
+        modelShader.setVec3("directionLight.ambient", directionLight.ambient);
+        modelShader.setVec3("directionLight.diffuse", directionLight.diffuse);
+        modelShader.setVec3("directionLight.specular", directionLight.specular);
 
         for (int i = 0; i < 4; ++i)
         {
-            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].ambient"), lights[i].ambient);
-            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].diffuse"), lights[i].diffuse);
-            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].specular"), lights[i].specular);
+            modelShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].ambient"), lights[i].ambient);
+            modelShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].diffuse"), lights[i].diffuse);
+            modelShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].specular"), lights[i].specular);
 
-            phoneShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].contant"), lights[i].contant);
-            phoneShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].linear"), lights[i].linear);
-            phoneShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].quadraic"), lights[i].quadraitc);
-            phoneShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].position"), pointLightPositions[i]);
+            modelShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].contant"), lights[i].contant);
+            modelShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].linear"), lights[i].linear);
+            modelShader.setFloat(std::string("pointLights[" + std::to_string(i) + "].quadraic"), lights[i].quadraitc);
+            modelShader.setVec3(std::string("pointLights[" + std::to_string(i) + "].position"), pointLightPositions[i]);
         }
 
-        phoneShader.setVec3("flashLight.position", cameraPos);
-        phoneShader.setVec3("flashLight.direction", cameraFront);
-        phoneShader.setFloat("flashLight.cutOff", glm::cos(glm::radians(flashLight.cutOff)));
-        phoneShader.setFloat("flashLight.outerCutOff", glm::cos(glm::radians(flashLight.outerCutOff)));
+        modelShader.setVec3("flashLight.position", cameraPos);
+        modelShader.setVec3("flashLight.direction", cameraFront);
+        modelShader.setFloat("flashLight.cutOff", glm::cos(glm::radians(flashLight.cutOff)));
+        modelShader.setFloat("flashLight.outerCutOff", glm::cos(glm::radians(flashLight.outerCutOff)));
         
 
-        phoneShader.setVec3("flashLight.ambient", flashLight.ambient);
-        phoneShader.setVec3("flashLight.diffuse", flashLight.diffuse);
-        phoneShader.setVec3("flashLight.specular", flashLight.specular);
+        modelShader.setVec3("flashLight.ambient", flashLight.ambient);
+        modelShader.setVec3("flashLight.diffuse", flashLight.diffuse);
+        modelShader.setVec3("flashLight.specular", flashLight.specular);
 
-        container2.bind();
-        container2_specular.bind();
-
-        glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < std::size(cubePositions); ++i)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            phoneShader.setMat4("uModel", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        model.Draw(modelShader);
 
         sunShader.use();
         sunShader.setInt("texturePtr", 0);

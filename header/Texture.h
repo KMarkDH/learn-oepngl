@@ -25,18 +25,18 @@ enum class TextureType
     MIRRORED_REPEAT_MIPMAP,
 };
 
-class Texture
+class tTexture
 {
     SYNTHESIZE(unsigned int, pointer);
 
 public:
 
-    Texture() = delete;
-    explicit Texture(std::string filename, unsigned int pointer, TextureType type);
+    tTexture() = delete;
+    explicit tTexture(std::string filename, unsigned int pointer, TextureType type);
 
     void bind() const;
 
-    ~Texture();
+    ~tTexture();
 
 private:
 
